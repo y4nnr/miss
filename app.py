@@ -582,6 +582,7 @@ if __name__ == '__main__':
     # Run on all network interfaces (0.0.0.0) to allow access from local network
     # threaded=True allows handling multiple requests
     # use_reloader=False prevents issues with network access
-    port = 5002
-    app.run(debug=True, host='0.0.0.0', port=port, threaded=True, use_reloader=False)
+    port = int(os.environ.get('PORT', 5002))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug, host='0.0.0.0', port=port, threaded=True, use_reloader=False)
 

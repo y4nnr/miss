@@ -1,116 +1,61 @@
-# Miss France 2026 - Application de Prédictions
+# Miss France Prediction App
 
-Application web moderne et minimaliste pour prédire les résultats de Miss France 2026. Les utilisateurs peuvent se connecter et faire leurs prédictions pour les 3 premières places.
+A web application for predicting and scoring Miss France competition results.
 
-## Fonctionnalités
+## Features
 
-- 🔐 Authentification multi-utilisateurs
-- 👑 Prédiction du top 3 (1ère, 2ème, 3ème place)
-- 👥 30 candidates avec leurs informations
-- 🎨 Interface moderne et minimaliste
-- 📊 Visualisation des prédictions actuelles
+- User registration and authentication
+- Prediction system for top 3 candidates
+- Automatic score calculation (5 pts for exact position, 3 pts for podium)
+- Real-time leaderboard with breakdown scores
+- Admin panel for entering final results
+- Vote toggle system (enable/disable predictions)
 
-## Prérequis
+## Setup
 
-- Python 3.8+
-- PostgreSQL (déjà en cours d'exécution)
-- pip
+### Local Development
 
-## Installation
-
-1. Créer un environnement virtuel (recommandé) :
+1. Install dependencies:
 ```bash
 python3 -m venv venv
-source venv/bin/activate  # Sur Windows: venv\Scripts\activate
-```
-
-2. Installer les dépendances :
-```bash
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. Créer la base de données PostgreSQL :
+2. Set up PostgreSQL database:
 ```bash
-createdb -U postgres Miss
+createdb Miss
 ```
 
-4. Initialiser la base de données avec les utilisateurs :
+3. Configure environment (optional):
+```bash
+cp .env.example .env
+# Edit .env with your settings
+```
+
+4. Initialize database:
 ```bash
 python init_db.py
 ```
 
-5. Scraper et peupler les candidates :
-```bash
-python scraper.py
-```
-
-## Utilisation
-
-1. Activer l'environnement virtuel (si vous l'utilisez) :
-```bash
-source venv/bin/activate  # Sur Windows: venv\Scripts\activate
-```
-
-2. Démarrer l'application :
+5. Run the app:
 ```bash
 python app.py
 ```
 
-2. Accéder à l'application :
-Ouvrez votre navigateur à l'adresse : `http://localhost:5000`
+The app will be available at `http://localhost:5002`
 
-3. Alternative - Utiliser le script de configuration automatique :
-```bash
-./setup.sh
-```
+## Production Deployment
 
-3. Se connecter :
-Utilisez l'un des comptes suivants (mot de passe = nom d'utilisateur) :
-- fifi
-- nono
-- kiki
-- keke
-- yann
-- baptiste
-- steph
-- renato
-- benouz
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed production deployment instructions.
 
-## Structure du projet
+## Environment Variables
 
-```
-miss/
-├── app.py              # Application Flask principale
-├── scraper.py          # Script de scraping des candidates
-├── init_db.py          # Initialisation de la base de données
-├── requirements.txt    # Dépendances Python
-├── templates/          # Templates HTML
-│   ├── base.html
-│   ├── login.html
-│   ├── predictions.html
-│   └── candidates.html
-└── static/
-    └── css/
-        └── style.css   # Styles CSS
-```
+- `SECRET_KEY`: Flask secret key for sessions
+- `DATABASE_URL`: PostgreSQL connection string
+- `PORT`: Server port (default: 5002)
+- `FLASK_DEBUG`: Enable debug mode (default: False)
 
-## Base de données
+## License
 
-L'application utilise PostgreSQL avec les tables suivantes :
-- `user` : Utilisateurs de l'application
-- `candidate` : Les 30 candidates à Miss France 2026
-- `prediction` : Prédictions des utilisateurs
-
-## Configuration
-
-La connexion à la base de données est configurée dans `app.py` :
-- Utilisateur : postgres
-- Mot de passe : postgres
-- Hôte : localhost
-- Base de données : Miss
-
-Pour modifier ces paramètres, éditez la ligne :
-```python
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/Miss'
-```
-
+Private project
