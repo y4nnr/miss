@@ -573,8 +573,8 @@ if __name__ == '__main__':
         s.close()
         print(f"\n{'='*60}")
         print(f"🚀 Serveur démarré!")
-        print(f"📱 Accès local:     http://localhost:5002")
-        print(f"🌐 Accès réseau:    http://{local_ip}:5002")
+        print(f"📱 Accès local:     http://localhost:{port}")
+        print(f"🌐 Accès réseau:    http://{local_ip}:{port}")
         print(f"{'='*60}\n")
     except:
         print(f"\n🚀 Serveur démarré sur http://0.0.0.0:5002\n")
