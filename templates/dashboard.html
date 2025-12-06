@@ -1,0 +1,598 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if final_result %}
+<div class="results-banner">
+    <h2>
+        <svg style="width: 28px; height: 28px; display: inline-block; vertical-align: middle; margin-right: 8px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));" viewBox="0 0 24 24" fill="white">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        Résultats
+    </h2>
+    <div class="result-item">
+        <span class="result-rank">1</span>
+        {% if final_result.first_place.image_url %}
+        <div class="result-image">
+            <img src="{{ final_result.first_place.image_url }}" alt="{{ final_result.first_place.name }}" onerror="this.style.display='none'">
+        </div>
+        {% endif %}
+        <div>
+            <strong>{{ final_result.first_place.name }}</strong>
+            <div style="font-size: 14px; opacity: 0.9;">{{ final_result.first_place.region }}</div>
+        </div>
+    </div>
+    <div class="result-item">
+        <span class="result-rank">2</span>
+        {% if final_result.second_place.image_url %}
+        <div class="result-image">
+            <img src="{{ final_result.second_place.image_url }}" alt="{{ final_result.second_place.name }}" onerror="this.style.display='none'">
+        </div>
+        {% endif %}
+        <div>
+            <strong>{{ final_result.second_place.name }}</strong>
+            <div style="font-size: 14px; opacity: 0.9;">{{ final_result.second_place.region }}</div>
+        </div>
+    </div>
+    <div class="result-item">
+        <span class="result-rank">3</span>
+        {% if final_result.third_place.image_url %}
+        <div class="result-image">
+            <img src="{{ final_result.third_place.image_url }}" alt="{{ final_result.third_place.name }}" onerror="this.style.display='none'">
+        </div>
+        {% endif %}
+        <div>
+            <strong>{{ final_result.third_place.name }}</strong>
+            <div style="font-size: 14px; opacity: 0.9;">{{ final_result.third_place.region }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- My Prediction -->
+{% if not current_user.is_admin %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">
+                <svg style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 256 256" fill="currentColor">
+                    <path d="M230.9,73.6A15.85,15.85,0,0,0,212,77.39l-33.67,36.29-35.8-80.29a1,1,0,0,1,0-.1,16,16,0,0,0-29.06,0,1,1,0,0,1,0,.1l-35.8,80.29L44,77.39A16,16,0,0,0,16.25,90.81c0,.11,0,.21.07.32L39,195a16,16,0,0,0,15.72,13H201.29A16,16,0,0,0,217,195L239.68,91.13c0-.11,0-.21.07-.32A15.85,15.85,0,0,0,230.9,73.6ZM201.35,191.68l-.06.32H54.71l-.06-.32L32,88l.14.16,42,45.24a8,8,0,0,0,13.18-2.18L128,40l40.69,91.25a8,8,0,0,0,13.18,2.18l42-45.24L224,88Z"></path>
+                </svg>
+                Ma Prédiction
+            </h2>
+            {% if user_prediction and final_result %}
+            <div class="card-subtitle">Score: {{ user_prediction.score }} pts</div>
+            {% endif %}
+        </div>
+        {% if user_prediction and votes_enabled and not (final_result and final_result.first_place_id and final_result.second_place_id and final_result.third_place_id) %}
+        <button type="button" class="btn btn-secondary" id="editBtn" style="width: auto; min-width: 100px; display: flex; align-items: center; gap: 6px; justify-content: center; position: relative; z-index: 10; cursor: pointer;">
+            <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Modifier
+        </button>
+        {% endif %}
+    </div>
+    
+    <!-- Display Mode -->
+    <div id="predictionDisplay" {% if not user_prediction %}style="display: none;"{% endif %}>
+        {% if user_prediction %}
+        <div class="prediction-grid">
+            <div class="prediction-card active">
+                <div class="place-badge place-1">1ère Place</div>
+                {% if user_prediction.first_place.image_url %}
+                <div class="prediction-candidate-image">
+                    <img src="{{ user_prediction.first_place.image_url }}" alt="{{ user_prediction.first_place.name }}" onerror="this.style.display='none'">
+                </div>
+                {% endif %}
+                <div class="candidate-name">{{ user_prediction.first_place.name }}</div>
+                <div class="candidate-region">{{ user_prediction.first_place.region }}</div>
+                {% if final_result %}
+                    <div style="margin-top: var(--spacing-xs);">
+                        {% set first_points = user_points_breakdown.get('first', 0) if user_points_breakdown else 0 %}
+                        {% if first_points == 5 %}
+                        <span class="badge badge-success" style="font-size: var(--font-size-xs); display: inline-block; padding: 4px 8px; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #16a34a; font-weight: 700;">
+                            +{{ first_points }} pts
+                        </span>
+                        {% elif first_points == 3 %}
+                        <span class="badge badge-warning" style="font-size: var(--font-size-xs); display: inline-block; padding: 4px 8px; background: rgba(234, 179, 8, 0.2); border: 1px solid rgba(234, 179, 8, 0.4); color: #ca8a04; font-weight: 700;">
+                            +{{ first_points }} pts
+                        </span>
+                        {% else %}
+                        <span class="badge badge-error" style="font-size: var(--font-size-xs); display: inline-block; padding: 4px 8px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #dc2626; font-weight: 700;">
+                            +{{ first_points }} pts
+                        </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="prediction-card active">
+                <div class="place-badge place-2">2ème Place</div>
+                {% if user_prediction.second_place.image_url %}
+                <div class="prediction-candidate-image">
+                    <img src="{{ user_prediction.second_place.image_url }}" alt="{{ user_prediction.second_place.name }}" onerror="this.style.display='none'">
+                </div>
+                {% endif %}
+                <div class="candidate-name">{{ user_prediction.second_place.name }}</div>
+                <div class="candidate-region">{{ user_prediction.second_place.region }}</div>
+                {% if final_result %}
+                    <div style="margin-top: var(--spacing-xs);">
+                        {% set second_points = user_points_breakdown.get('second', 0) if user_points_breakdown else 0 %}
+                        {% if second_points == 5 %}
+                        <span class="badge badge-success" style="font-size: var(--font-size-xs); display: inline-block; padding: 4px 8px; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #16a34a; font-weight: 700;">
+                            +{{ second_points }} pts
+                        </span>
+                        {% elif second_points == 3 %}
+                        <span class="badge badge-warning" style="font-size: var(--font-size-xs); display: inline-block; padding: 4px 8px; background: rgba(234, 179, 8, 0.2); border: 1px solid rgba(234, 179, 8, 0.4); color: #ca8a04; font-weight: 700;">
+                            +{{ second_points }} pts
+                        </span>
+                        {% else %}
+                        <span class="badge badge-error" style="font-size: var(--font-size-xs); display: inline-block; padding: 4px 8px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #dc2626; font-weight: 700;">
+                            +{{ second_points }} pts
+                        </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="prediction-card active">
+                <div class="place-badge place-3">3ème Place</div>
+                {% if user_prediction.third_place.image_url %}
+                <div class="prediction-candidate-image">
+                    <img src="{{ user_prediction.third_place.image_url }}" alt="{{ user_prediction.third_place.name }}" onerror="this.style.display='none'">
+                </div>
+                {% endif %}
+                <div class="candidate-name">{{ user_prediction.third_place.name }}</div>
+                <div class="candidate-region">{{ user_prediction.third_place.region }}</div>
+                {% if final_result %}
+                    <div style="margin-top: var(--spacing-xs);">
+                        {% set third_points = user_points_breakdown.get('third', 0) if user_points_breakdown else 0 %}
+                        {% if third_points == 5 %}
+                        <span class="badge badge-success" style="font-size: var(--font-size-xs); display: inline-block; padding: 4px 8px; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #16a34a; font-weight: 700;">
+                            +{{ third_points }} pts
+                        </span>
+                        {% elif third_points == 3 %}
+                        <span class="badge badge-warning" style="font-size: var(--font-size-xs); display: inline-block; padding: 4px 8px; background: rgba(234, 179, 8, 0.2); border: 1px solid rgba(234, 179, 8, 0.4); color: #ca8a04; font-weight: 700;">
+                            +{{ third_points }} pts
+                        </span>
+                        {% else %}
+                        <span class="badge badge-error" style="font-size: var(--font-size-xs); display: inline-block; padding: 4px 8px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #dc2626; font-weight: 700;">
+                            +{{ third_points }} pts
+                        </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Edit Mode -->
+    <form method="POST" action="{{ url_for('dashboard') }}" id="predictionForm" {% if user_prediction %}style="display: none;"{% endif %}>
+        <input type="hidden" name="first_place" id="first_place_input" value="{% if user_prediction %}{{ user_prediction.first_place_id }}{% endif %}" required>
+        <input type="hidden" name="second_place" id="second_place_input" value="{% if user_prediction %}{{ user_prediction.second_place_id }}{% endif %}" required>
+        <input type="hidden" name="third_place" id="third_place_input" value="{% if user_prediction %}{{ user_prediction.third_place_id }}{% endif %}" required>
+        
+        <div class="prediction-carousels">
+            <div class="prediction-carousel-section">
+                <div class="place-badge place-1">1ère Place</div>
+                <div class="candidate-carousel" data-position="first">
+                    {% for candidate in candidates %}
+                    <div class="candidate-carousel-item {% if user_prediction and user_prediction.first_place_id == candidate.id %}selected{% endif %}" 
+                         data-candidate-id="{{ candidate.id }}" 
+                         data-position="first">
+                        {% if candidate.image_url %}
+                        <div class="carousel-candidate-image">
+                            <img src="{{ candidate.image_url }}" alt="{{ candidate.name }}" onerror="this.style.display='none'; this.parentElement.classList.add('placeholder');">
+                        </div>
+                        {% else %}
+                        <div class="carousel-candidate-image placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <div class="carousel-candidate-info">
+                            <div class="carousel-candidate-name">{{ candidate.name }}</div>
+                            <div class="carousel-candidate-region">{{ candidate.region }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="prediction-carousel-section">
+                <div class="place-badge place-2">2ème Place</div>
+                <div class="candidate-carousel" data-position="second">
+                    {% for candidate in candidates %}
+                    <div class="candidate-carousel-item {% if user_prediction and user_prediction.second_place_id == candidate.id %}selected{% endif %}" 
+                         data-candidate-id="{{ candidate.id }}" 
+                         data-position="second">
+                        {% if candidate.image_url %}
+                        <div class="carousel-candidate-image">
+                            <img src="{{ candidate.image_url }}" alt="{{ candidate.name }}" onerror="this.style.display='none'; this.parentElement.classList.add('placeholder');">
+                        </div>
+                        {% else %}
+                        <div class="carousel-candidate-image placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <div class="carousel-candidate-info">
+                            <div class="carousel-candidate-name">{{ candidate.name }}</div>
+                            <div class="carousel-candidate-region">{{ candidate.region }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="prediction-carousel-section">
+                <div class="place-badge place-3">3ème Place</div>
+                <div class="candidate-carousel" data-position="third">
+                    {% for candidate in candidates %}
+                    <div class="candidate-carousel-item {% if user_prediction and user_prediction.third_place_id == candidate.id %}selected{% endif %}" 
+                         data-candidate-id="{{ candidate.id }}" 
+                         data-position="third">
+                        {% if candidate.image_url %}
+                        <div class="carousel-candidate-image">
+                            <img src="{{ candidate.image_url }}" alt="{{ candidate.name }}" onerror="this.style.display='none'; this.parentElement.classList.add('placeholder');">
+                        </div>
+                        {% else %}
+                        <div class="carousel-candidate-image placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <div class="carousel-candidate-info">
+                            <div class="carousel-candidate-name">{{ candidate.name }}</div>
+                            <div class="carousel-candidate-region">{{ candidate.region }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                {% if user_prediction %}Mettre à jour{% else %}Enregistrer{% endif %}
+            </button>
+            {% if user_prediction %}
+            <button type="button" class="btn btn-secondary" onclick="toggleEditMode()" style="flex: 0; min-width: 100px; display: flex; align-items: center; gap: 6px; justify-content: center; padding: 10px 16px;">
+                <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span>Annuler</span>
+            </button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% else %}
+<!-- Admin Dashboard -->
+<!-- Votes Toggle -->
+<div class="card" style="margin-bottom: var(--spacing-lg);">
+    <div class="card-header">
+        <h2 class="card-title">
+            <svg style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+            </svg>
+            Administration
+        </h2>
+    </div>
+    <div style="background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md); border-left: 4px solid var(--accent);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0 0 var(--spacing-xs) 0; font-size: var(--font-size-base);">Statut des votes</h3>
+                <div style="font-size: var(--font-size-sm); color: var(--text-secondary);">
+                    {% if votes_enabled %}
+                    <span style="color: var(--success); font-weight: 600;">✓ Votes activés</span> - Les utilisateurs peuvent modifier leurs prédictions
+                    {% else %}
+                    <span style="color: var(--error); font-weight: 600;">✗ Votes désactivés</span> - Les utilisateurs ne peuvent plus modifier leurs prédictions
+                    {% endif %}
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('toggle_votes') }}" style="display: inline;">
+                <input type="hidden" name="enabled" value="{{ 'false' if votes_enabled else 'true' }}">
+                <button type="submit" class="btn {% if votes_enabled %}btn-secondary{% else %}btn-primary{% endif %}" style="padding: var(--spacing-sm) var(--spacing-md);">
+                    {% if votes_enabled %}
+                    <svg style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Désactiver les votes
+                    {% else %}
+                    <svg style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Activer les votes
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Results (if results exist) -->
+{% if final_result %}
+<div class="card" style="margin-bottom: var(--spacing-lg);">
+    <div class="card-header">
+        <h2 class="card-title">
+            <svg style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            Résultats finaux
+        </h2>
+    </div>
+    <div style="background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md); border-left: 4px solid var(--primary);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md);">
+            <div>
+                <h3 style="margin: 0 0 var(--spacing-sm) 0; font-size: var(--font-size-base);">Résultat actuel</h3>
+                <div style="font-size: var(--font-size-sm); color: var(--text-secondary);">
+                    <div style="margin-bottom: var(--spacing-xs);"><strong>1.</strong> {{ final_result.first_place.name }} - {{ final_result.first_place.region }}</div>
+                    <div style="margin-bottom: var(--spacing-xs);"><strong>2.</strong> {{ final_result.second_place.name }} - {{ final_result.second_place.region }}</div>
+                    <div><strong>3.</strong> {{ final_result.third_place.name }} - {{ final_result.third_place.region }}</div>
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('results') }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer les résultats finaux ? Cela réinitialisera tous les scores.');">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn btn-secondary" style="padding: var(--spacing-xs) var(--spacing-sm); font-size: var(--font-size-sm);">
+                    <svg style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Supprimer
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Link to Results Entry -->
+<div class="card">
+    <div style="padding: var(--spacing-lg); text-align: center;">
+        <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+            Utilisez la page <strong>Résultats</strong> pour entrer ou modifier les résultats finaux de la compétition.
+        </p>
+        <a href="{{ url_for('results') }}" class="btn btn-primary">
+            <svg style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            Entrer les résultats finaux
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function toggleEditMode() {
+    const display = document.getElementById('predictionDisplay');
+    const form = document.getElementById('predictionForm');
+    const editBtn = document.getElementById('editBtn');
+    
+    // Check if we're currently in display mode (display is visible)
+    const isDisplayMode = display && (display.style.display !== 'none' && window.getComputedStyle(display).display !== 'none');
+    
+    if (isDisplayMode) {
+        // Switch to edit mode
+        if (display) display.style.display = 'none';
+        if (form) form.style.display = 'block';
+        if (editBtn) {
+            editBtn.style.display = 'none'; // Hide the button in edit mode since we have "Annuler"
+        }
+    } else {
+        // Switch to display mode
+        if (display) display.style.display = 'block';
+        if (form) form.style.display = 'none';
+        if (editBtn) {
+            editBtn.style.display = 'flex';
+            editBtn.innerHTML = '<svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg><span>Modifier</span>';
+        }
+    }
+}
+
+// Add event listener for edit button and carousel logic
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit button listener
+    const editBtn = document.getElementById('editBtn');
+    if (editBtn) {
+        editBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleEditMode();
+        });
+    }
+    
+    // Carousel selection logic
+    document.querySelectorAll('.candidate-carousel-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const position = this.dataset.position;
+            const candidateId = this.dataset.candidateId;
+            
+            // Remove selected class from all items in this carousel
+            const carousel = this.closest('.candidate-carousel');
+            carousel.querySelectorAll('.candidate-carousel-item').forEach(i => {
+                i.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked item
+            this.classList.add('selected');
+            
+            // Update hidden input
+            const inputId = position + '_place_input';
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = candidateId;
+            }
+        });
+    });
+    
+    // Smooth scroll to selected item on load
+    document.querySelectorAll('.candidate-carousel').forEach(carousel => {
+        const selected = carousel.querySelector('.candidate-carousel-item.selected');
+        if (selected) {
+            setTimeout(() => {
+                selected.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }, 100);
+        }
+    });
+    }); // Close DOMContentLoaded
+</script>
+
+<!-- Scoring System Info -->
+{% if not current_user.is_admin %}
+<div class="card" style="margin-bottom: var(--spacing-md);">
+    <div style="background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md);">
+        <h3 style="margin-bottom: var(--spacing-sm); font-size: var(--font-size-base); font-weight: 600;">
+            <svg style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            Système de points
+        </h3>
+        <div style="font-size: var(--font-size-sm); color: var(--text-secondary);">
+            <div style="margin-bottom: var(--spacing-xs);">• Position exacte: <strong>5 pts</strong></div>
+            <div style="margin-bottom: var(--spacing-xs);">• Sur le podium (mauvaise position): <strong>3 pts</strong></div>
+            <div style="margin-top: var(--spacing-sm); padding-top: var(--spacing-sm); border-top: 1px solid var(--border); color: var(--text-primary); font-weight: 600;">
+                Score maximum: <strong>15 pts</strong> (podium parfait)
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- All Predictions -->
+{% if not current_user.is_admin %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">
+            <svg style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Toutes les Prédictions
+        </h2>
+    </div>
+    
+    <div class="predictions-list">
+        {% for item in all_predictions %}
+        {% if item.prediction %}
+            {% set prediction = item.prediction %}
+            {% set rank = item.rank %}
+            {% set points_breakdown = item.points_breakdown %}
+        {% else %}
+            {% set prediction = item %}
+            {% set rank = none %}
+            {% set points_breakdown = none %}
+        {% endif %}
+        <div class="prediction-item-card {% if prediction.user_id == current_user.id %}my-prediction{% endif %}">
+            <div class="prediction-item-header">
+                <div class="prediction-item-user">
+                    {% if final_result and rank %}
+                    <span class="prediction-rank-badge">
+                        #{{ rank }}
+                    </span>
+                    {% endif %}
+                    <strong>{{ prediction.user.username }}</strong>
+                    {% if prediction.user_id == current_user.id %}
+                    <span class="badge badge-success" style="margin-left: 8px; font-size: 10px;">Vous</span>
+                    {% endif %}
+                </div>
+                {% if final_result %}
+                <div class="prediction-item-score">{{ prediction.score }} pts</div>
+                {% endif %}
+            </div>
+            <div class="prediction-item-picks">
+                <div class="prediction-pick">
+                    <span class="pick-rank">1</span>
+                    <div class="pick-info">
+                        {% if prediction.first_place.image_url %}
+                        <div class="pick-image">
+                            <img src="{{ prediction.first_place.image_url }}" alt="{{ prediction.first_place.name }}" onerror="this.style.display='none'">
+                        </div>
+                        {% endif %}
+                        <div class="pick-text">
+                            <span class="pick-name">{{ prediction.first_place.name }}</span>
+                            <span class="pick-region">{{ prediction.first_place.region }}</span>
+                            {% if final_result %}
+                                {% set first_pts = points_breakdown.get('first', 0) if points_breakdown else 0 %}
+                                {% if first_pts == 5 %}
+                                <span class="pick-points" style="display: inline-block; padding: 2px 6px; background: rgba(34, 197, 94, 0.15); border-radius: 4px; font-weight: 700; color: #16a34a;">+{{ first_pts }} pts</span>
+                                {% elif first_pts == 3 %}
+                                <span class="pick-points" style="display: inline-block; padding: 2px 6px; background: rgba(234, 179, 8, 0.15); border-radius: 4px; font-weight: 700; color: #ca8a04;">+{{ first_pts }} pts</span>
+                                {% else %}
+                                <span class="pick-points" style="display: inline-block; padding: 2px 6px; background: rgba(239, 68, 68, 0.15); border-radius: 4px; font-weight: 700; color: #dc2626;">+{{ first_pts }} pts</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="prediction-pick">
+                    <span class="pick-rank">2</span>
+                    <div class="pick-info">
+                        {% if prediction.second_place.image_url %}
+                        <div class="pick-image">
+                            <img src="{{ prediction.second_place.image_url }}" alt="{{ prediction.second_place.name }}" onerror="this.style.display='none'">
+                        </div>
+                        {% endif %}
+                        <div class="pick-text">
+                            <span class="pick-name">{{ prediction.second_place.name }}</span>
+                            <span class="pick-region">{{ prediction.second_place.region }}</span>
+                            {% if final_result %}
+                                {% set second_pts = points_breakdown.get('second', 0) if points_breakdown else 0 %}
+                                {% if second_pts == 5 %}
+                                <span class="pick-points" style="display: inline-block; padding: 2px 6px; background: rgba(34, 197, 94, 0.15); border-radius: 4px; font-weight: 700; color: #16a34a;">+{{ second_pts }} pts</span>
+                                {% elif second_pts == 3 %}
+                                <span class="pick-points" style="display: inline-block; padding: 2px 6px; background: rgba(234, 179, 8, 0.15); border-radius: 4px; font-weight: 700; color: #ca8a04;">+{{ second_pts }} pts</span>
+                                {% else %}
+                                <span class="pick-points" style="display: inline-block; padding: 2px 6px; background: rgba(239, 68, 68, 0.15); border-radius: 4px; font-weight: 700; color: #dc2626;">+{{ second_pts }} pts</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="prediction-pick">
+                    <span class="pick-rank">3</span>
+                    <div class="pick-info">
+                        {% if prediction.third_place.image_url %}
+                        <div class="pick-image">
+                            <img src="{{ prediction.third_place.image_url }}" alt="{{ prediction.third_place.name }}" onerror="this.style.display='none'">
+                        </div>
+                        {% endif %}
+                        <div class="pick-text">
+                            <span class="pick-name">{{ prediction.third_place.name }}</span>
+                            <span class="pick-region">{{ prediction.third_place.region }}</span>
+                            {% if final_result %}
+                                {% set third_pts = points_breakdown.get('third', 0) if points_breakdown else 0 %}
+                                {% if third_pts == 5 %}
+                                <span class="pick-points" style="display: inline-block; padding: 2px 6px; background: rgba(34, 197, 94, 0.15); border-radius: 4px; font-weight: 700; color: #16a34a;">+{{ third_pts }} pts</span>
+                                {% elif third_pts == 3 %}
+                                <span class="pick-points" style="display: inline-block; padding: 2px 6px; background: rgba(234, 179, 8, 0.15); border-radius: 4px; font-weight: 700; color: #ca8a04;">+{{ third_pts }} pts</span>
+                                {% else %}
+                                <span class="pick-points" style="display: inline-block; padding: 2px 6px; background: rgba(239, 68, 68, 0.15); border-radius: 4px; font-weight: 700; color: #dc2626;">+{{ third_pts }} pts</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

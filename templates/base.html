@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{% block title %}Miss France 2026{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=5.0">
+    <script>
+        // Highlight active nav items (both top and bottom)
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.bottom-nav-item, .top-nav-item');
+            navItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href && (currentPath === href || currentPath.startsWith(href + '/'))) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        {% if current_user.is_authenticated %}
+        <!-- Top Navigation (Desktop/Tablet) -->
+        <nav class="top-nav">
+            <div class="top-nav-container">
+                <a href="{{ url_for('dashboard') }}" class="top-nav-item">
+                    <svg class="top-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span class="top-nav-label">Dashboard</span>
+                </a>
+                <a href="{{ url_for('candidates') }}" class="top-nav-item">
+                    <svg class="top-nav-icon" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M208,96a80,80,0,1,0-88,79.6V200H88a8,8,0,0,0,0,16h32v24a8,8,0,0,0,16,0V216h32a8,8,0,0,0,0-16H136V175.6A80.11,80.11,0,0,0,208,96ZM64,96a64,64,0,1,1,64,64A64.07,64.07,0,0,1,64,96Z"></path>
+                    </svg>
+                    <span class="top-nav-label">Candidates</span>
+                </a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('results') }}" class="top-nav-item admin-nav">
+                    <svg class="top-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+                    </svg>
+                    <span class="top-nav-label">Admin</span>
+                </a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="top-nav-item">
+                    <svg class="top-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span class="top-nav-label">Déconnexion</span>
+                </a>
+            </div>
+        </nav>
+        {% endif %}
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+        
+        {% if current_user.is_authenticated %}
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="{{ url_for('dashboard') }}" class="bottom-nav-item">
+                <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span class="bottom-nav-label">Dashboard</span>
+            </a>
+            <a href="{{ url_for('candidates') }}" class="bottom-nav-item">
+                <svg class="bottom-nav-icon" viewBox="0 0 256 256" fill="currentColor">
+                    <path d="M208,96a80,80,0,1,0-88,79.6V200H88a8,8,0,0,0,0,16h32v24a8,8,0,0,0,16,0V216h32a8,8,0,0,0,0-16H136V175.6A80.11,80.11,0,0,0,208,96ZM64,96a64,64,0,1,1,64,64A64.07,64.07,0,0,1,64,96Z"></path>
+                </svg>
+                <span class="bottom-nav-label">Candidates</span>
+            </a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('results') }}" class="bottom-nav-item admin-nav">
+                <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+                </svg>
+                <span class="bottom-nav-label">Admin</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="bottom-nav-item">
+                <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span class="bottom-nav-label">Déconnexion</span>
+            </a>
+        </nav>
+        {% endif %}
+    </div>
+</body>
+</html>

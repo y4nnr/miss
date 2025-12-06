@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="error-container">
+    <h1>404</h1>
+    <p>Page non trouvée</p>
+    <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}" class="btn-primary">
+        Retour à l'accueil
+    </a>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1 class="auth-title">
+            <svg style="width: 40px; height: 40px; display: block; margin: 0 auto 16px; opacity: 0.9;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+            </svg>
+            Miss France 2026
+        </h1>
+        <p class="auth-subtitle">Connectez-vous pour faire vos prédictions</p>
+        
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <label class="form-label" for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" class="form-input" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Se connecter</button>
+        </form>
+        
+        <div class="auth-link">
+            <p>Pas encore de compte ? <a href="{{ url_for('register') }}">Créer un compte</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1 class="card-title">
+            <svg style="width: 28px; height: 28px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 256 256" fill="currentColor">
+                <path d="M208,96a80,80,0,1,0-88,79.6V200H88a8,8,0,0,0,0,16h32v24a8,8,0,0,0,16,0V216h32a8,8,0,0,0,0-16H136V175.6A80.11,80.11,0,0,0,208,96ZM64,96a64,64,0,1,1,64,64A64.07,64.07,0,0,1,64,96Z"></path>
+            </svg>
+            Candidates
+        </h1>
+    </div>
+    
+    <div class="candidates-grid">
+        {% for candidate in candidates %}
+        <div class="candidate-card">
+            {% if candidate.image_url %}
+            <div class="candidate-image">
+                <img src="{{ candidate.image_url }}" alt="{{ candidate.name }}" onerror="this.style.display='none'">
+            </div>
+            {% else %}
+            <div class="candidate-image">
+                <div style="color: var(--text-light); font-size: var(--font-size-sm); text-align: center; padding: var(--spacing-md);">
+                    {{ candidate.name }}
+                </div>
+            </div>
+            {% endif %}
+            <div class="candidate-info">
+                <div class="candidate-name">{{ candidate.name }}</div>
+                <div class="candidate-region">{{ candidate.region }}</div>
+                {% if candidate.age %}
+                <div style="font-size: var(--font-size-xs); color: var(--text-secondary); margin-top: var(--spacing-xs);">
+                    {{ candidate.age }} ans
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

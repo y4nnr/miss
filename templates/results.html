@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1 class="card-title">
+            <svg style="width: 28px; height: 28px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+            </svg>
+            Administration
+        </h1>
+        <div class="card-subtitle">Entrez les résultats finaux du podium</div>
+    </div>
+    
+    <!-- Votes Toggle -->
+    <div style="background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-lg); border-left: 4px solid var(--accent);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0 0 var(--spacing-xs) 0; font-size: var(--font-size-base);">Statut des votes</h3>
+                <div style="font-size: var(--font-size-sm); color: var(--text-secondary);">
+                    {% if votes_enabled %}
+                    <span style="color: var(--success); font-weight: 600;">✓ Votes activés</span> - Les utilisateurs peuvent modifier leurs prédictions
+                    {% else %}
+                    <span style="color: var(--error); font-weight: 600;">✗ Votes désactivés</span> - Les utilisateurs ne peuvent plus modifier leurs prédictions
+                    {% endif %}
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('toggle_votes') }}" style="display: inline;">
+                <input type="hidden" name="enabled" value="{{ 'false' if votes_enabled else 'true' }}">
+                <button type="submit" class="btn {% if votes_enabled %}btn-secondary{% else %}btn-primary{% endif %}" style="padding: var(--spacing-sm) var(--spacing-md);">
+                    {% if votes_enabled %}
+                    <svg style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Désactiver les votes
+                    {% else %}
+                    <svg style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Activer les votes
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    {% if final_result %}
+    <div style="background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-lg); border-left: 4px solid var(--primary);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md);">
+            <h3 style="margin: 0;">Résultat actuel</h3>
+            <form method="POST" action="{{ url_for('results') }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer les résultats finaux ? Cela réinitialisera tous les scores.');">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn btn-secondary" style="padding: var(--spacing-xs) var(--spacing-sm); font-size: var(--font-size-sm);">
+                    <svg style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Supprimer
+                </button>
+            </form>
+        </div>
+        <div style="font-size: var(--font-size-sm);">
+            <div style="margin-bottom: var(--spacing-xs);"><strong>1.</strong> {{ final_result.first_place.name }} - {{ final_result.first_place.region }}</div>
+            <div style="margin-bottom: var(--spacing-xs);"><strong>2.</strong> {{ final_result.second_place.name }} - {{ final_result.second_place.region }}</div>
+            <div><strong>3.</strong> {{ final_result.third_place.name }} - {{ final_result.third_place.region }}</div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="{{ url_for('results') }}">
+        <input type="hidden" name="first_place" id="first_place_input" value="{% if final_result %}{{ final_result.first_place_id }}{% endif %}" required>
+        <input type="hidden" name="second_place" id="second_place_input" value="{% if final_result %}{{ final_result.second_place_id }}{% endif %}" required>
+        <input type="hidden" name="third_place" id="third_place_input" value="{% if final_result %}{{ final_result.third_place_id }}{% endif %}" required>
+        
+        <div class="prediction-carousels">
+            <div class="prediction-carousel-section">
+                <div class="place-badge place-1">1ère Place</div>
+                <div class="candidate-carousel" data-position="first">
+                    {% for candidate in candidates %}
+                    <div class="candidate-carousel-item {% if final_result and final_result.first_place_id == candidate.id %}selected{% endif %}" 
+                         data-candidate-id="{{ candidate.id }}" 
+                         data-position="first">
+                        {% if candidate.image_url %}
+                        <div class="carousel-candidate-image">
+                            <img src="{{ candidate.image_url }}" alt="{{ candidate.name }}" onerror="this.style.display='none'; this.parentElement.classList.add('placeholder');">
+                        </div>
+                        {% else %}
+                        <div class="carousel-candidate-image placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <div class="carousel-candidate-info">
+                            <div class="carousel-candidate-name">{{ candidate.name }}</div>
+                            <div class="carousel-candidate-region">{{ candidate.region }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="prediction-carousel-section">
+                <div class="place-badge place-2">2ème Place</div>
+                <div class="candidate-carousel" data-position="second">
+                    {% for candidate in candidates %}
+                    <div class="candidate-carousel-item {% if final_result and final_result.second_place_id == candidate.id %}selected{% endif %}" 
+                         data-candidate-id="{{ candidate.id }}" 
+                         data-position="second">
+                        {% if candidate.image_url %}
+                        <div class="carousel-candidate-image">
+                            <img src="{{ candidate.image_url }}" alt="{{ candidate.name }}" onerror="this.style.display='none'; this.parentElement.classList.add('placeholder');">
+                        </div>
+                        {% else %}
+                        <div class="carousel-candidate-image placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <div class="carousel-candidate-info">
+                            <div class="carousel-candidate-name">{{ candidate.name }}</div>
+                            <div class="carousel-candidate-region">{{ candidate.region }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="prediction-carousel-section">
+                <div class="place-badge place-3">3ème Place</div>
+                <div class="candidate-carousel" data-position="third">
+                    {% for candidate in candidates %}
+                    <div class="candidate-carousel-item {% if final_result and final_result.third_place_id == candidate.id %}selected{% endif %}" 
+                         data-candidate-id="{{ candidate.id }}" 
+                         data-position="third">
+                        {% if candidate.image_url %}
+                        <div class="carousel-candidate-image">
+                            <img src="{{ candidate.image_url }}" alt="{{ candidate.name }}" onerror="this.style.display='none'; this.parentElement.classList.add('placeholder');">
+                        </div>
+                        {% else %}
+                        <div class="carousel-candidate-image placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <div class="carousel-candidate-info">
+                            <div class="carousel-candidate-name">{{ candidate.name }}</div>
+                            <div class="carousel-candidate-region">{{ candidate.region }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div style="background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-lg);">
+            <h3 style="margin-bottom: var(--spacing-sm); font-size: var(--font-size-base);">Système de points</h3>
+            <div style="font-size: var(--font-size-sm); color: var(--text-secondary);">
+                <div>• Position exacte: <strong>5 pts</strong></div>
+                <div>• Sur le podium (mauvaise position): <strong>3 pts</strong></div>
+                <div style="margin-top: var(--spacing-xs); color: var(--text-primary); font-weight: 600;">
+                    Score maximum: <strong>15 pts</strong> (podium parfait)
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Enregistrer les résultats finaux</button>
+    </form>
+</div>
+
+<script>
+// Carousel selection logic for admin results
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.candidate-carousel-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent any event bubbling
+            
+            const position = this.dataset.position;
+            const candidateId = this.dataset.candidateId;
+            
+            // Find the specific carousel container for this position
+            const carousel = this.closest('.candidate-carousel');
+            if (!carousel) return;
+            
+            // Only remove selected class from items in THIS specific carousel
+            const itemsInThisCarousel = carousel.querySelectorAll('.candidate-carousel-item');
+            itemsInThisCarousel.forEach(i => {
+                i.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked item
+            this.classList.add('selected');
+            
+            // Update hidden input for this specific position
+            const inputId = position + '_place_input';
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = candidateId;
+            }
+            
+            // Scroll the selected item into view
+            setTimeout(() => {
+                this.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }, 50);
+        });
+    });
+    
+    // Smooth scroll to selected items on page load
+    document.querySelectorAll('.candidate-carousel').forEach(carousel => {
+        const selected = carousel.querySelector('.candidate-carousel-item.selected');
+        if (selected) {
+            setTimeout(() => {
+                selected.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }, 100);
+        }
+    });
+});
+</script>
+{% endblock %}
