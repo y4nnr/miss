@@ -1128,7 +1128,7 @@ h3 {
     align-items: flex-start;
     justify-content: center;
     padding: var(--spacing-lg);
-    padding-top: 5vh;
+    padding-top: 2vh;
 }
 
 .auth-card {
