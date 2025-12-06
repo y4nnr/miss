@@ -1125,9 +1125,10 @@ h3 {
 .auth-container {
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     padding: var(--spacing-lg);
+    padding-top: 10vh;
 }
 
 .auth-card {
